@@ -1,0 +1,8 @@
+{
+    "aprovado": {
+            "mensagem": "Aprovado"
+    },
+    "reprovado": {
+            "mensagem": "Reprovado"
+    }
+}
