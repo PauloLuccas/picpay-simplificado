@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class TransactionController extends Controller
 {
@@ -25,7 +26,7 @@ class TransactionController extends Controller
 
             $newTransaction = $this->transactionService->createTransaction((object)$transactionDTO->all());
 
-            return response()->json($newTransaction, Response::HTTP_OK);
+            return response()->json($newTransaction, ResponseAlias::HTTP_OK);
 
         } catch (Exception $exception) {
             throw new Exception($exception->getMessage());
