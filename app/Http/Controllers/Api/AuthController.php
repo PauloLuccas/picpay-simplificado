@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -17,17 +18,20 @@ class AuthController extends Controller
 
     public function login(Request $request): JsonResponse
     {
-        $validator = \Validator::make($request->all(), [
-            'email' => 'required',
-            'password' => 'required'
+        $request->validate([
+            'email' => 'required|string|email',
+            'password' => 'required|string'
         ]);
 
-        if($validator->fails()) {
-            return response()->json($validator->error(), Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        $credentials = $request->only('email', 'password');
 
-        if(!$token = auth()->attempt($validator->validated())) {
-            return response()->json(['error' => 'Não autenticado'], Response::HTTP_UNAUTHORIZED);
+        $token = Auth::guard('api')->attempt($credentials);
+
+        if(!$token) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Não autenticado',
+            ], Response::HTTP_UNAUTHORIZED);
         }
 
         return $this->respondWithToken($token);
@@ -35,15 +39,11 @@ class AuthController extends Controller
 
     public function register(Request $request): JsonResponse
     {
-        $validator = \Validator::make($request->all(), [
+        $request->validate([
             'name' => 'required|string|between:2,100',
             'email' => 'required|string|email|max:100|unique:users',
             'password' => 'required|string|confirmed|min:6',
         ]);
-
-        if($validator->fails()){
-            return response()->json($validator->errors()->toJson(), Response::HTTP_BAD_REQUEST);
-        }
 
         $user = User::create([
             'name' => $request->get('name'),
@@ -51,7 +51,7 @@ class AuthController extends Controller
             'password' => Hash::make($request->get('password')),
         ]);
 
-        $token = JWTAuth::fromUser($user);
+        $token = Auth::guard('api')->login($user);
 
         return response()->json([
             'message' => 'Usuário registrado com sucesso',
@@ -68,13 +68,15 @@ class AuthController extends Controller
 
     public function logout(): JsonResponse
     {
-        auth()->logout();
-
-        return response()->json(['message' => 'Deslogado com sucesso']);
+        Auth::guard('api')->logout();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Deslogado com sucesso',
+        ]);
     }
     public function refresh(): JsonResponse
     {
-        return $this->respondWithToken(auth()->refresh());
+        return $this->respondWithToken(Auth::guard('api')->refresh());
     }
 
     private function respondWithToken($token): JsonResponse

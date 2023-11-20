@@ -8,6 +8,7 @@ use App\Services\UserServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Exception;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class UserController extends Controller
 {
@@ -18,27 +19,26 @@ class UserController extends Controller
         $this->userService = $userService;
     }
 
-    // TODO: Criar um request personalizavel para o User.
-    public function create(Request $userDTO)
+    public function create(Request $userDTO): \Illuminate\Http\JsonResponse
     {
         try {
 
             $newUser = $this->userService->createUser($userDTO->all());
 
-            return response()->json($newUser, Response::HTTP_CREATED);
+            return response()->json($newUser, ResponseAlias::HTTP_CREATED);
 
         } catch (Exception $exception) {
             throw new Exception($exception->getMessage());
         }
     }
 
-    public function getAllUsers()
+    public function getAllUsers(): \Illuminate\Http\JsonResponse
     {
         try {
 
             $users = $this->userService->getAllUsers();
 
-            return \response()->json($users, Response::HTTP_OK);
+            return \response()->json($users, ResponseAlias::HTTP_OK);
 
         } catch (Exception $exception) {
             throw new Exception($exception->getMessage());
